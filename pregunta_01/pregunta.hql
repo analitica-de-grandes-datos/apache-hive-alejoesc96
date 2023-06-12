@@ -13,8 +13,13 @@ Escriba el resultado a la carpeta `output` de directorio de trabajo.
 
         >>> Escriba su respuesta a partir de este punto <<<
 */
-data = LOAD 'data.tsv' AS (Words:chararray, Date:chararray, Number:int);
-new_word = FOREACH data GENERATE Words AS word;
-group_by = GROUP new_word BY word;
-counter = FOREACH group_by GENERATE group, COUNT(new_word);
-STORE counter INTO 'output' USING PigStorage(',');
+DROP TABLE IF EXISTS tabla_de_datos;
+
+CREATE TABLE tabla_de_datos (letter STRING, dates DATE, number INT)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t';
+
+LOAD DATA LOCAL INPATH 'data.tsv' OVERWRITE INTO TABLE tabla_de_datos;
+
+INSERT OVERWRITE DIRECTORY 'output'
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+SELECT letter, COUNT(letter) AS freq FROM tabla_de_datos GROUP BY letter;
